@@ -24,9 +24,11 @@ public class InfluxDbStepExecution extends SynchronousNonBlockingStepExecution<V
         FilePath workspace = getContext().get(FilePath.class);
         InfluxDbPublisher publisher = new InfluxDbPublisher(step.getSelectedTarget());
         publisher.setCustomData(step.getCustomData());
+        publisher.setCustomDataTags(step.getCustomDataTags());
         publisher.setCustomDataMap(step.getCustomDataMap());
         publisher.setCustomDataMapTags(step.getCustomDataMapTags());
-        publisher.setCustomDataTags(step.getCustomDataTags());
+        publisher.setCustomDataListMap(step.getCustomDataListMap());
+        publisher.setCustomDataListMapTags(step.getCustomDataListMapTags());
         publisher.setCustomPrefix(step.getCustomPrefix());
         publisher.setCustomProjectName(step.getCustomProjectName());
         publisher.setJenkinsEnvParameterField(step.getJenkinsEnvParameterField());

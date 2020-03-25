@@ -23,7 +23,6 @@ import org.influxdb.dto.Point;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -127,6 +126,50 @@ public class InfluxDbPublicationService {
     private final Map<String, Map<String, String>> customDataMapTags;
 
     /**
+     * Custom data list maps for fields, especially in pipelines, where <b>multiple points per measurement</b> are calculated
+     * or retrieved by Groovy functions which should be sent to InfluxDB.
+     * <p>
+     * This goes beyond {@code customDataMap} since it allows to define multiple data points per measurement.
+     * <p>
+     * Example for a pipeline script:
+     * <pre>{@code
+     * def myCustomMeasurementFields = [:]
+     * myCustomMeasurementFields['series_1'] = []
+     * def passedTests = currentBuild.rawBuild.getAction(AbstractTestResultAction.class).getPassedTests()
+     * passedTests.each { caseResult ->
+     *   def myFields = [:]
+     *   myFields['testStatus'] = caseResult.status.toString()
+     *   myFields['fullName'] = caseResult.fullName
+     *   myCustomMeasurementFields['series_1'] += myFields
+     * }
+     * influxDbPublisher(target: 'my-target', customDataListMap: myCustomMeasurementFields)
+     * }</pre>
+     */
+    private final Map<String, List<Map<String, Object>>> customDataListMap;
+
+    /**
+     * Custom data maps for tags, especially in pipelines, where multiple points per measurement are calculated
+     * or retrieved by Groovy functions which should be sent to InfluxDB.
+     * <p>
+     * Custom tags that are sent to respective measurements defined in {@code customDataListMap}.
+     * Lists with tag values must have the same order as in {@code customDataListMap}.
+     * <p>
+     * Example for a pipeline script:
+     * <pre>{@code
+     * def myCustomMeasurementTags = [:]
+     * myCustomMeasurementTags['series_1'] = []
+     * def passedTests = currentBuild.rawBuild.getAction(AbstractTestResultAction.class).getPassedTests()
+     * passedTests.each { caseResult ->
+     *   def myTags1 = [:]
+     *   myTags1['testStatus'] = caseResult.status.toString()
+     *   myCustomMeasurementTags['series_1'] += myTags1
+     * }
+     * influxDbPublisher(target: 'my-target', customDataListMap: ..., customDataListMapTags: myCustomMeasurementTags)
+     * }</pre>
+     */
+    private final Map<String, List<Map<String, String>>> customDataListMapTags;
+
+    /**
      * Jenkins parameter(s) which will be added as field set to measurement 'jenkins_data'.
      * If parameter value has a $-prefix, it will be resolved from current Jenkins job environment properties.
      */
@@ -151,7 +194,16 @@ public class InfluxDbPublicationService {
 
     private final long timestamp;
 
-    public InfluxDbPublicationService(List<Target> selectedTargets, String customProjectName, String customPrefix, Map<String, Object> customData, Map<String, String> customDataTags, Map<String, Map<String, String>> customDataMapTags, Map<String, Map<String, Object>> customDataMap, long timestamp, String jenkinsEnvParameterField, String jenkinsEnvParameterTag, String measurementName) {
+    public InfluxDbPublicationService(List<Target> selectedTargets, String customProjectName, String customPrefix,
+                                      Map<String, Object> customData,
+                                      Map<String, String> customDataTags,
+                                      Map<String, Map<String, Object>> customDataMap,
+                                      Map<String, Map<String, String>> customDataMapTags,
+                                      Map<String, List<Map<String, Object>>> customDataListMap,
+                                      Map<String, List<Map<String, String>>> customDataListMapTags,
+                                      long timestamp,
+                                      String jenkinsEnvParameterField, String jenkinsEnvParameterTag,
+                                      String measurementName) {
         this.selectedTargets = selectedTargets;
         this.customProjectName = customProjectName;
         this.customPrefix = customPrefix;
@@ -159,6 +211,8 @@ public class InfluxDbPublicationService {
         this.customDataTags = customDataTags;
         this.customDataMap = customDataMap;
         this.customDataMapTags = customDataMapTags;
+        this.customDataListMap = customDataListMap;
+        this.customDataListMapTags = customDataListMapTags;
         this.timestamp = timestamp;
         this.jenkinsEnvParameterField = jenkinsEnvParameterField;
         this.jenkinsEnvParameterTag = jenkinsEnvParameterTag;
@@ -193,6 +247,14 @@ public class InfluxDbPublicationService {
             addPoints(pointsToWrite, cdmGen, listener);
         } else {
             logger.log(Level.FINE, "Data source empty: Custom Data Map");
+        }
+
+        CustomDataListMapPointGenerator cdlmpGen = new CustomDataListMapPointGenerator(build, listener, measurementRenderer, timestamp, jenkinsEnvParameterTag, customPrefix, customDataListMap, customDataListMapTags);
+        if (cdlmpGen.hasReport()) {
+            listener.getLogger().println("[InfluxDB Plugin] Custom data list map found. Writing to InfluxDB...");
+            addPoints(pointsToWrite, cdlmpGen, listener);
+        } else {
+            logger.log(Level.FINE, "Data source empty: Custom Data List Map");
         }
 
         try {

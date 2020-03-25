@@ -38,6 +38,8 @@ public class InfluxDbPublisher extends Notifier implements SimpleBuildStep {
     private Map<String, String> customDataTags;
     private Map<String, Map<String, Object>> customDataMap;
     private Map<String, Map<String, String>> customDataMapTags;
+    private Map<String, List<Map<String, Object>>> customDataListMap;
+    private Map<String, List<Map<String, String>>> customDataListMapTags;
     private String jenkinsEnvParameterField;
     private String jenkinsEnvParameterTag;
     private String measurementName;
@@ -117,6 +119,24 @@ public class InfluxDbPublisher extends Notifier implements SimpleBuildStep {
     @DataBoundSetter
     public void setCustomDataMapTags(Map<String, Map<String, String>> customDataMapTags) {
         this.customDataMapTags = customDataMapTags;
+    }
+
+    public Map<String, List<Map<String, Object>>> getCustomDataListMap() {
+        return customDataListMap;
+    }
+
+    @DataBoundSetter
+    public void setCustomDataListMap(Map<String, List<Map<String, Object>>> customDataListMap) {
+        this.customDataListMap = customDataListMap;
+    }
+
+    public Map<String, List<Map<String, String>>> getCustomDataListMapTags() {
+        return customDataListMapTags;
+    }
+
+    @DataBoundSetter
+    public void setCustomDataListMapTags(Map<String, List<Map<String, String>>> customDataListMapTags) {
+        this.customDataListMapTags = customDataListMapTags;
     }
 
     public String getJenkinsEnvParameterField() {
@@ -211,8 +231,10 @@ public class InfluxDbPublisher extends Notifier implements SimpleBuildStep {
                 expandedCustomPrefix,
                 customData,
                 customDataTags,
-                customDataMapTags,
                 customDataMap,
+                customDataMapTags,
+                customDataListMap,
+                customDataListMapTags,
                 currTime,
                 jenkinsEnvParameterField,
                 jenkinsEnvParameterTag,
