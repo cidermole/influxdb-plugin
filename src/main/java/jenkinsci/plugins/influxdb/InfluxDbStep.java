@@ -36,6 +36,7 @@ public class InfluxDbStep extends Step {
     private Map<String, List<Map<String, String>>> customDataListMapTags;
     private String jenkinsEnvParameterField;
     private String jenkinsEnvParameterTag;
+    private Map<String, Object> jenkinsParameterField;
     private String measurementName;
 
     @Deprecated
@@ -150,6 +151,15 @@ public class InfluxDbStep extends Step {
     @DataBoundSetter
     public void setJenkinsEnvParameterTag(String jenkinsEnvParameterTag) {
         this.jenkinsEnvParameterTag = jenkinsEnvParameterTag;
+    }
+
+    public Map<String, Object> getJenkinsParameterField() {
+        return jenkinsParameterField;
+    }
+
+    @DataBoundSetter
+    public void setJenkinsParameterField(Map<String, Object> jenkinsParameterField) {
+        this.jenkinsParameterField = jenkinsParameterField;
     }
 
     public String getMeasurementName() {

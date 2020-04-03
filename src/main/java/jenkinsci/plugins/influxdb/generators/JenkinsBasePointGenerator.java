@@ -44,6 +44,7 @@ public class JenkinsBasePointGenerator extends AbstractPointGenerator {
     private final Run<?, ?> build;
     private final String customPrefix;
     private final String jenkinsEnvParameterField;
+    private final Map<String, Object> jenkinsParameterField;
     private final String measurementName;
     private EnvVars env;
 
@@ -52,11 +53,13 @@ public class JenkinsBasePointGenerator extends AbstractPointGenerator {
     public JenkinsBasePointGenerator(Run<?, ?> build, TaskListener listener,
                                      MeasurementRenderer<Run<?, ?>> projectNameRenderer,
                                      long timestamp, String jenkinsEnvParameterTag, String jenkinsEnvParameterField,
+                                     Map<String, Object> jenkinsParameterField,
                                      String customPrefix, String measurementName, EnvVars env) {
         super(build, listener, projectNameRenderer, timestamp, jenkinsEnvParameterTag);
         this.build = build;
         this.customPrefix = customPrefix;
         this.jenkinsEnvParameterField = jenkinsEnvParameterField;
+        this.jenkinsParameterField = jenkinsParameterField;
         this.measurementName = measurementName;
         this.env = env;
     }
@@ -113,6 +116,10 @@ public class JenkinsBasePointGenerator extends AbstractPointGenerator {
             Properties fieldProperties = parsePropertiesString(jenkinsEnvParameterField);
             Map fieldMap = resolveEnvParameterAndTransformToMap(fieldProperties);
             point.fields(fieldMap);
+        }
+
+        if(jenkinsParameterField != null && jenkinsParameterField.size() > 0) {
+            point.fields(jenkinsParameterField);
         }
 
         return new Point[] {point.build()};

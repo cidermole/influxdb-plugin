@@ -176,6 +176,12 @@ public class InfluxDbPublicationService {
     private final String jenkinsEnvParameterField;
 
     /**
+     * Jenkins parameter(s) which will be added as field set to measurement 'jenkins_data'.
+     * Supports arbitrary data types (float, integer, string, boolean, ...) of InfluxDB.
+     */
+    private final Map<String, Object> jenkinsParameterField;
+
+    /**
      * Jenkins parameter(s) which will be added as tag set to  measurement 'jenkins_data'.
      * If parameter value has a $-prefix, it will be resolved from current Jenkins job environment properties.
      */
@@ -203,6 +209,7 @@ public class InfluxDbPublicationService {
                                       Map<String, List<Map<String, String>>> customDataListMapTags,
                                       long timestamp,
                                       String jenkinsEnvParameterField, String jenkinsEnvParameterTag,
+                                      Map<String, Object> jenkinsParameterField,
                                       String measurementName) {
         this.selectedTargets = selectedTargets;
         this.customProjectName = customProjectName;
@@ -215,6 +222,7 @@ public class InfluxDbPublicationService {
         this.customDataListMapTags = customDataListMapTags;
         this.timestamp = timestamp;
         this.jenkinsEnvParameterField = jenkinsEnvParameterField;
+        this.jenkinsParameterField = jenkinsParameterField;
         this.jenkinsEnvParameterTag = jenkinsEnvParameterTag;
         this.measurementName = measurementName;
     }
@@ -230,7 +238,7 @@ public class InfluxDbPublicationService {
         List<Point> pointsToWrite = new ArrayList<>();
 
         // Basic metrics
-        JenkinsBasePointGenerator jGen = new JenkinsBasePointGenerator(build, listener, measurementRenderer, timestamp, jenkinsEnvParameterTag, jenkinsEnvParameterField, customPrefix, measurementName, env);
+        JenkinsBasePointGenerator jGen = new JenkinsBasePointGenerator(build, listener, measurementRenderer, timestamp, jenkinsEnvParameterTag, jenkinsEnvParameterField, jenkinsParameterField, customPrefix, measurementName, env);
         addPoints(pointsToWrite, jGen, listener);
 
         CustomDataPointGenerator cdGen = new CustomDataPointGenerator(build, listener, measurementRenderer, timestamp, jenkinsEnvParameterTag, customPrefix, customData, customDataTags, measurementName);

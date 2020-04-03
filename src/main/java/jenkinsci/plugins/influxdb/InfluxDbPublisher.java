@@ -42,6 +42,7 @@ public class InfluxDbPublisher extends Notifier implements SimpleBuildStep {
     private Map<String, List<Map<String, String>>> customDataListMapTags;
     private String jenkinsEnvParameterField;
     private String jenkinsEnvParameterTag;
+    private Map<String, Object> jenkinsParameterField;
     private String measurementName;
     private EnvVars env;
 
@@ -157,6 +158,15 @@ public class InfluxDbPublisher extends Notifier implements SimpleBuildStep {
         this.jenkinsEnvParameterTag = jenkinsEnvParameterTag;
     }
 
+    public Map<String, Object> getJenkinsParameterField() {
+        return jenkinsParameterField;
+    }
+
+    @DataBoundSetter
+    public void setJenkinsParameterField(Map<String, Object> jenkinsParameterField) {
+        this.jenkinsParameterField = jenkinsParameterField;
+    }
+
     public String getMeasurementName() {
         return measurementName;
     }
@@ -238,6 +248,7 @@ public class InfluxDbPublisher extends Notifier implements SimpleBuildStep {
                 currTime,
                 jenkinsEnvParameterField,
                 jenkinsEnvParameterTag,
+                jenkinsParameterField,
                 measurementName);
 
         // Publishes the metrics
